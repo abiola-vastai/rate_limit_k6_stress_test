@@ -1,6 +1,6 @@
 ## Running locally
 
-First ensure you have the vast webserver running 
+First ensure you have the vast webserver running. Also this would allow finetunning the webserver for your use case / experiment with db configs, redis etc. 
 
 ```bash
 k6 run main.js
