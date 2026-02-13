@@ -12,6 +12,10 @@ This generates the k6 summary in terminal output and writes `summary.html`.
 
 ![k6 report screenshot](./report.png)
 
+![k6 report screenshot](./report_2.png)
+
+![k6 report screenshot](./report_3.png)
+
 ### Frontend headers check
 
 If you run the VAST frontend locally, you should see the rate-limit headers rendered correctly.
