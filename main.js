@@ -63,9 +63,6 @@ export const options = {
       maxDuration: '1m',
       startTime: '2m30s',
     },
-
-    // Scenario 4: Window boundary race-condition checks (duration-based to avoid
-    // misleading "0/N shared iterations" when requests are slow under contention)
     window_boundary: {
       exec: 'windowBoundary',
       executor: 'constant-vus',
@@ -77,14 +74,8 @@ export const options = {
   },
 
   thresholds: {
-    // 429 median is ~3ms (the rate limiter itself is fast). The p95 tail (up to ~2s)
-    // is Gunicorn worker contention: ratelimitapi() runs INSIDE the view handler, so
-    // a would-be 429 must first be picked up by a sync worker. During burst_attack,
-    // all workers are blocked on search_asks_ DB queries (~1-3s each).
-    // TODO: tighten to p(95)<50 once Redis tween short-circuits before the view.
     'http_req_duration{status:429}': ['p(95)<2000'],
     'blocked_requests': ['count>0'], // Expect some blocks
-    // k6 counts 429 as "failed" — set expected_response tag to handle this
     'http_req_failed': ['rate<0.8'], // Most requests will be 429 from shared IP; relax
   },
 };
@@ -99,7 +90,6 @@ export function advancedTraffic() {
   const response = http.get(URL, params);
   rate_limit_overhead.add(response.timings.duration);
 
-  // k6 canonicalizes headers via Go's textproto.CanonicalMIMEHeaderKey:
   //   X-RateLimit-Remaining → X-Ratelimit-Remaining  (capital L lowered)
   //   X-RateLimit-Limit     → X-Ratelimit-Limit
   //   X-RateLimit-Reset     → X-Ratelimit-Reset
@@ -120,7 +110,6 @@ export function advancedTraffic() {
 }
 
 export function windowBoundary() {
-  // Probe current bucket state
   const probe = http.get(URL, {
     tags: { name: 'bundles_probe' },
     responseCallback: expectedStatuses,
